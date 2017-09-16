@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Demo.FormControl;
+using DevExpress.XtraReports.UI;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -14,6 +16,16 @@ namespace Demo
         public Form1()
         {
             InitializeComponent();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            Report.PrintTest print = new Report.PrintTest();
+            ReportPrintTool PrintTool = new ReportPrintTool(print);
+            PrintTool.ShowPreview();
+            //print
+            //FrmLoading frm = new FrmLoading();
+            //frm.ShowDialog();
         }
     }
 }
