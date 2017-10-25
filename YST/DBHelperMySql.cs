@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Specialized;
 using System.Data;
-using MySql.Data.MySqlClient;
-using System.Configuration;
-using System.Data.Common;
 using System.Collections.Generic;
+using MySql.Data.MySqlClient;
+
 namespace YST
 {
     /// <summary>

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Windows.Forms;
 
 namespace Tools
@@ -17,7 +15,7 @@ namespace Tools
             Application.SetCompatibleTextRenderingDefault(false);
             try
             {
-                Application.Run(new Form1());
+                Application.Run(new FrmToolMain());
             }
             catch(Exception ex )
             {

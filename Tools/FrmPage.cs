@@ -1,18 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 
 namespace Tools
 {
-    public partial class Form1 : Form
+    public partial class FrmPage : Form
     {
         private List<ControlItem> list;
-        public Form1()
+        public FrmPage()
         {
             InitializeComponent();
         }
@@ -29,13 +24,13 @@ namespace Tools
 
         private void testPanel_DataSourceChanged(object sender, EventArgs e)
         {
-            this.label1.Text = testPanel.CurrentPage.ToString();
+            label1.Text = testPanel.CurrentPage.ToString();
             label2.Text = testPanel.TotalPage.ToString();
         }
 
         private void testPanel_PageTurned(object sender, EventArgs e)
         {
-            this.label1.Text = testPanel.CurrentPage.ToString();
+            label1.Text = testPanel.CurrentPage.ToString();
         }
 
         private void Form1_Shown(object sender, EventArgs e)
@@ -60,7 +55,7 @@ namespace Tools
                 item.Click += item_Click; ;
                 list.Add(item);
             }
-            this.testPanel.DataSource = list.ConvertAll<Control>(input => input as Control);
+            testPanel.DataSource = list.ConvertAll<Control>(input => input as Control);
         }
 
         void item_Click(object sender, EventArgs e)
@@ -71,8 +66,10 @@ namespace Tools
 
         private void button4_Click(object sender, EventArgs e)
         {
-            if (!string.IsNullOrEmpty(this.textBox2.Text.Trim()))
-            { }
+            //if (!string.IsNullOrEmpty(textBox2.Text.Trim()))
+            //{
+            //   testPanel.Search<ControlItem>(item=>item.goodsName.Contains(textBox2.Text.Trim()));
+            //}
         }
     }
 }

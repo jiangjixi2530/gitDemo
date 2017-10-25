@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
+using Control = System.Windows.Forms.Control;
 
 namespace Tools
 {
@@ -15,67 +17,78 @@ namespace Tools
         /// <summary>
         /// 首页
         /// </summary>
-        public readonly int Homepage = 1;
+        public readonly int homepage = 1;
         /// <summary>
         /// 需要分页的控件集合
         /// </summary>
-        private List<Control> _dataSource;
+        private object dataSource;
+        /// <summary>
+        /// 需要分页的控件集合
+        /// </summary>
+        private List<Control> listSource;
         /// <summary>
         /// 列数
         /// </summary>
-        private int _columnsCount = 1;
+        private int columnsCount = 1;
         /// <summary>
         /// 行数
         /// </summary>
-        private int _rowsCount = 1;
+        private int rowsCount = 1;
         /// <summary>
         /// 每页数量
         /// </summary>
-        private int _pageControlCount = 1;
+        private int pageControlCount = 1;
         /// <summary>
         /// 页数集合
         /// </summary>
-        private List<Panel> _allPages;
+        private List<Panel> listPages;
         /// <summary>
-        /// 搜索后的页Panel集合
+        /// 控件之间左右间距
         /// </summary>
-        private List<Panel> _searchPages;
+        private int inSpaceLeftAndRight;
+        /// <summary>
+        /// 控件之间上下间距
+        /// </summary>
+        private int inSpaceTopAndBottom;
         #endregion
         #region 可配置属性定义
         /// <summary>
         /// 外边距
         /// </summary>
         [Description("外边距"), Category("WinBoxProperty")]
+        [DefaultValue(0)]
         public Padding OutSpace { get; set; }
         /// <summary>
         /// 分页方法
         /// </summary>
         [Description("分页方法"), Category("WinBoxProperty")]
+        [DefaultValue(PageMethodEnum.Normal)]
         public PageMethodEnum PageMethod { get; set; }
         /// <summary>
         /// 内间距的左右边距，当值大于0时，外边距的右边距将失效
         /// </summary>
-        [Description("内间左右边距，设置后外边距的右边距将失效"), Category("WinBoxProperty")]
+        [Description("控件之间左右边距，设置后外边距的右边距将失效"), Category("WinBoxProperty")]
+        [DefaultValue(0)]
         public int InSpaceLeftAndRight { get; set; }
         /// <summary>
         /// 内间距的左右边距，当值大于0时，外边距的下边距将失效
         /// </summary>
-        [Description("内间距的上下边距，设置后外边距下边距将失效"), Category("WinBoxProperty")]
+        [Description("控件之间上下边距，设置后外边距下边距将失效"), Category("WinBoxProperty")]
+        [DefaultValue(0)]
         public int InSpaceTopAndBottom { get; set; }
         /// <summary>
-        /// 需要分页的数据源,list必须是Control类型或Control子类
-        /// (赋值示例：list.ConvertAll<Control/>(input => input as Control);)
+        /// 需要分页的数据源
         /// </summary>           
         [Description("需要分页的数据源"), Category("WinBoxProperty")]
-        public List<Control> DataSource
+        public object DataSource
         {
             get
             {
-                return _dataSource;
+                return dataSource;
             }
             set
             {
-                _dataSource = value;
+                dataSource = value;
                 Paging();
                 if (DataSourceChanged != null)
                 {
@@ -122,7 +135,7 @@ namespace Tools
         {
             get
             {
-                CreateParams cp = base.CreateParams;
+                var cp = base.CreateParams;
                 cp.ExStyle |= 0x02000000; // Turn on WS_EX_COMPOSITED 
                 return cp;
             }
@@ -130,22 +143,26 @@ namespace Tools
         /// <summary>
         /// 分页
         /// </summary>
-        private void Paging(bool isSearch = false)
+        private void Paging()
         {
             if (!IsHandleCreated) return;
             try
             {
-                CurrentPage = Homepage;
-                TotalPage = Homepage;
-                _allPages = new List<Panel>();
+                CurrentPage = homepage;
+                TotalPage = homepage;
+                listSource = new List<Control>();
+                listPages = new List<Panel>();
+                foreach (var item in (IEnumerable)DataSource)
+                {
+                    listSource.Add(item as Control);
+                }
                 while (Controls.Count > 0)
                 {
-                    Control c = Controls[0];
+                    var c = Controls[0];
                     Controls.Remove(c);
-                    if (isSearch)
-                        c.Dispose();
+                    //c.Dispose();
                 }
-                if (_dataSource == null || _dataSource.Count <= 0) return;
+                if (listSource == null || listSource.Count <= 0) return;
                 switch (PageMethod)
                 {
                     case PageMethodEnum.Normal:
@@ -170,41 +187,42 @@ namespace Tools
         {
             if (InSpaceLeftAndRight > 0)
             {
-                _columnsCount = (Width + InSpaceLeftAndRight - OutSpace.Left) /
-                                (_dataSource[0].Width + InSpaceLeftAndRight);
+                inSpaceLeftAndRight = InSpaceLeftAndRight;
+                columnsCount = (Width + InSpaceLeftAndRight - OutSpace.Left) /
+                                (listSource[0].Width + InSpaceLeftAndRight);
             }
             else
             {
-                _columnsCount = (Width - OutSpace.Left - OutSpace.Right) / _dataSource[0].Width;
-                if (_columnsCount > 0)
+                columnsCount = (Width - OutSpace.Left - OutSpace.Right) / listSource[0].Width;
+                if (columnsCount > 0)
                 {
-                    InSpaceLeftAndRight = (Width - OutSpace.Left - OutSpace.Right) % _dataSource[0].Width /
-                                          _columnsCount;
+                    inSpaceLeftAndRight = (Width - OutSpace.Left - OutSpace.Right) % listSource[0].Width /
+                                          columnsCount;
                 }
             }
             if (InSpaceTopAndBottom > 0)
             {
-
-                _rowsCount = (Height + InSpaceTopAndBottom - OutSpace.Top) /
-                             (_dataSource[0].Height + InSpaceTopAndBottom);
+                inSpaceTopAndBottom = InSpaceTopAndBottom;
+                rowsCount = (Height + InSpaceTopAndBottom - OutSpace.Top) /
+                             (listSource[0].Height + InSpaceTopAndBottom);
             }
             else
             {
-                _rowsCount = (Height - OutSpace.Top - OutSpace.Bottom) / _dataSource[0].Height;
-                if (_rowsCount > 0)
+                rowsCount = (Height - OutSpace.Top - OutSpace.Bottom) / listSource[0].Height;
+                if (rowsCount > 0)
                 {
-                    InSpaceTopAndBottom = (Height - OutSpace.Top - OutSpace.Bottom) % _dataSource[0].Height /
-                                          _rowsCount;
+                    inSpaceTopAndBottom = (Height - OutSpace.Top - OutSpace.Bottom) % listSource[0].Height /
+                                          rowsCount;
                 }
             }
-            _columnsCount = _columnsCount == 0 ? 1 : _columnsCount;
-            _rowsCount = _rowsCount == 0 ? 1 : _rowsCount;
-            _pageControlCount = _columnsCount * _rowsCount;
-            TotalPage = _dataSource.Count / _pageControlCount;
-            if (_dataSource.Count % _pageControlCount > 0)
+            columnsCount = columnsCount == 0 ? 1 : columnsCount;
+            rowsCount = rowsCount == 0 ? 1 : rowsCount;
+            pageControlCount = columnsCount * rowsCount;
+            TotalPage = listSource.Count / pageControlCount;
+            if (listSource.Count % pageControlCount > 0)
                 TotalPage++;
             FillUpControls();
-            AppointPage(Homepage);
+            AppointPage(homepage);
         }
 
         #region 翻页事件
@@ -213,13 +231,10 @@ namespace Tools
         /// </summary>
         public void NextPage()
         {
-            if (CurrentPage == Homepage)
+            if (CurrentPage == homepage)
                 return;
             ShowContolByPage(CurrentPage - 1);
-            if (PageTurned != null)
-            {
-                PageTurned(this, new EventArgs());
-            }
+            if (PageTurned != null) PageTurned(this, new EventArgs());
         }
         /// <summary>
         /// 下一页
@@ -229,10 +244,7 @@ namespace Tools
             if (CurrentPage == TotalPage)
                 return;
             ShowContolByPage(CurrentPage + 1);
-            if (PageTurned != null)
-            {
-                PageTurned(this, new EventArgs());
-            }
+            if (PageTurned != null) PageTurned(this, new EventArgs());
         }
         /// <summary>
         /// 指定页跳转
@@ -242,85 +254,65 @@ namespace Tools
         {
             if (page == CurrentPage || page <= 0 || page > TotalPage) return;
             ShowContolByPage(page);
-            if (PageTurned != null)
-            {
-                PageTurned(this, new EventArgs());
-            }
+            if (PageTurned != null) PageTurned(this, new EventArgs());
         }
-
-        public void Search<T>(Predicate<T> match)
-        {
-            if (match != null)
-            {
-                Predicate<Control> controlMatch = match as Predicate<Control>;
-                _dataSource.FindAll(controlMatch);
-            }
-            else
-            {
-
-            }
-        }
-        #endregion
         /// <summary>
         /// 根据页码显示
         /// </summary>
         /// <param name="page"></param>
         private void ShowContolByPage(object page)
         {
-            DateTime now = DateTime.Now;
             try
             {
                 // ReSharper disable once InconsistentNaming
                 var Page = page as int? ?? 0;
-                for (int i = 0; i < _allPages.Count; i++)
+                for (var i = 0; i < listPages.Count; i++)
                 {
-                    if (_allPages[i].Visible && i != Page - 1)
-                        _allPages[i].Visible = false;
+                    if (listPages[i].Visible && i != Page - 1)
+                        listPages[i].Visible = false;
                     if (i == Page - 1)
-                        _allPages[i].Visible = true;
+                        listPages[i].Visible = true;
                 }
                 CurrentPage = Page;
-                Console.WriteLine(DateTime.Now.Subtract(now).TotalMilliseconds);
+                if (PageTurned != null) PageTurned(this, new EventArgs());
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
         }
+        #endregion
         /// <summary>
         /// 将控件加载进PANEL
         /// </summary>
         private void FillUpControls()
         {
-            DateTime now = DateTime.Now;
             for (var i = 0; i < TotalPage; i++)
             {
-                Panel panel = new Panel();
-                panel.Dock = DockStyle.Fill;
-                panel.Visible = false;
-                for (int j = i * _pageControlCount; j < (i + 1) * _pageControlCount && j < _dataSource.Count; j++)
+                var panel = new Panel
                 {
-                    var orderByCount = j % _pageControlCount;
-                    _dataSource[j].Location = new Point((orderByCount % _columnsCount) * (_dataSource[j].Width + InSpaceLeftAndRight) + OutSpace.Left, (orderByCount / _columnsCount) * (_dataSource[j].Height + InSpaceTopAndBottom) + OutSpace.Top);
-                    panel.Controls.Add(_dataSource[j]);
+                    Dock = DockStyle.Fill,
+                    Visible = false
+                };
+                for (var j = i * pageControlCount; j < (i + 1) * pageControlCount && j < listSource.Count; j++)
+                {
+                    var orderByCount = j % pageControlCount;
+                    listSource[j].Location = new Point((orderByCount % columnsCount) * (listSource[j].Width + inSpaceLeftAndRight) + OutSpace.Left, (orderByCount / columnsCount) * (listSource[j].Height + inSpaceTopAndBottom) + OutSpace.Top);
+                    panel.Controls.Add(listSource[j]);
                 }
                 Controls.Add(panel);
-                _allPages.Add(panel);
+                listPages.Add(panel);
             }
-            if (_allPages.Count > 0)
-                _allPages[0].Visible = true;
+            if (listPages.Count > 0)
+                listPages[0].Visible = true;
+        }
 
-            //for (var i = 0; i < _dataSource.Count && i < _pageControlCount; i++)
-            //{
-            //    for (var j = 0; j < TotalPage; j++)
-            //    {
-            //        if ((i + j * _pageControlCount) >= _dataSource.Count) continue;
-            //        _dataSource[i + j * _pageControlCount].Location = location;
-            //    }
-            //    _dataSource[i].Visible = true;
-            //    Controls.Add(_dataSource[i]);
-            //}
-            Console.WriteLine(DateTime.Now.Subtract(now).TotalMilliseconds);
+        protected override void OnSizeChanged(EventArgs e)
+        {
+            Paging();
+            if (DataSourceChanged != null)
+                DataSourceChanged(this, new AddingNewEventArgs());
+            base.OnSizeChanged(e);
         }
     }
 }
