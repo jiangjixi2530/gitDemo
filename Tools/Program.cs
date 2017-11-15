@@ -15,7 +15,7 @@ namespace Tools
             Application.SetCompatibleTextRenderingDefault(false);
             try
             {
-                Application.Run(new FrmToolMain());
+                Application.Run(new Form1());
             }
             catch(Exception ex )
             {

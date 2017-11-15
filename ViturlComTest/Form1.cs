@@ -176,9 +176,10 @@ namespace ViturlComTest
                 byte[] buffer = new byte[receivePort.BytesToRead];
                 receivePort.Read(buffer, 0, buffer.Length);
                 readString = System.Text.Encoding.ASCII.GetString(buffer).Trim();
+                //readString = receivePort.ReadExisting();
                 Invoke((EventHandler)delegate
                {
-                   txtReceiveLog.AppendText(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + ":收到数据 " + readString + "\n");
+                   txtReceiveLog.AppendText(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.ffff") + ":收到数据 " + readString + "\n");
                });
                 if (chkLedReceive.Checked)
                 {
